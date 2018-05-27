@@ -41,3 +41,4 @@ JDATA Competition.
 
 选用朴素的随机森林分类器，没调参（因为自动调参工具GridSearchCV不支持multiclass-multioutput形式的训练，这里我们的label是个multioutput）。
 
+训练用的feature是从时间节点T之前六个月的记录里选取，label是从T未来一个月的记录里选取。T在2017年2.1，3.1，4.1里选取。时间range选取上可以再进行优化，比如baseline里是选了之前一个月、三个月、六个月的feature结合作为整体feature。而且当前没有用online learning的模式，对时序属性也没太多关注，只是简单的把不同时间点T对应的feature与label叠加作为整体的feature与label一次训练。预测时取5.1之前六个月的feature，预测5.1到5.31的label信息。
