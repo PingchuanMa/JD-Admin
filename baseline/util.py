@@ -295,6 +295,47 @@ class Features(object):
     '''
     继续添加
     '''
+    '''
+    added by Yujun Shi
+    self.df_Order_Comment_User_Sku
+    user_id sku_id o_id o_date o_area o_sku_num comment_create_tm score_level age sex user_lv_cd price cate para_1 para_2 para_3
+    '''
+    #　对３０的评价次数
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate']==30)].\
+											    groupby(['user_id'])['comment_create_tm'].\
+											    nunique().\
+											    reset_index().\
+											    rename(columns={'user_id':'user_id','comment_create_tm':BetweenFlag+'num_comment_on_30'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_,on=['user_id'],how='left')
+    #　对１０１的评价次数
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate']==101)].\
+											    groupby(['user_id'])['comment_create_tm'].\
+											    nunique().\
+											    reset_index().\
+											    rename(columns={'user_id':'user_id','comment_create_tm':BetweenFlag+'num_comment_on_101'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_,on=['user_id'],how='left')
+    # 对３０或者１０１的评价次数
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate']==101) | (features_temp_Order_['cate']==30)].\
+											    groupby(['user_id'])['comment_create_tm'].\
+											    nunique().\
+											    reset_index().\
+											    rename(columns={'user_id':'user_id','comment_create_tm':BetweenFlag+'num_comment_on_101_and_30'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_,on=['user_id'],how='left')
+    # 对３０的评分
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate']==30) & features_temp_Order_['score_level'] != -1].\
+											    groupby(['user_id'])['score_level'].\
+											    mean().\
+											    reset_index().\
+											    rename(columns={'user_id':'user_id','score_level':BetweenFlag+'score_on_30'})
+	self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_,on=['user_id'],how='left')
+    # 对１０１的评分
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate']==101) & features_temp_Order_['score_level'] != -1].\
+											    groupby(['user_id'])['score_level'].\
+											    mean().\
+											    reset_index().\
+											    rename(columns={'user_id':'user_id','score_level':BetweenFlag+'score_on_101'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_,on=['user_id'],how='left')
+
 
   def MakeFeature_Action_(self,
                           FeatureMonthBegin,
