@@ -96,6 +96,12 @@ class Features(object):
         BetweenFlag='AM' + str(month) + '_'
       )
 
+    delete_cols = ['OM1_month_cate_30_101_monthnum',
+            'OM3_score_on_101', 'OM6_score_on_101',
+            'OM1_month_cate_30_101_monthnum','OM1_score_on_101']
+    self.data_BuyOrNot_FirstTime = \
+        self.data_BuyOrNot_FirstTime.drop(delete_cols, axis=1)
+
     self.TrainColumns = [col for col in self.data_BuyOrNot_FirstTime.columns if
                          col not in self.IDColumns + self.LabelColumns]
 
