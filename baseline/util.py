@@ -304,18 +304,34 @@ class Features(object):
       rename(columns={'user_id': 'user_id', 'o_date': BetweenFlag + 'o_date_cate_30_101_gap'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
+    # features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30)]. \
+    #   sort_values('o_date'). \
+    #   groupby(['user_id'])['o_date']. \
+    #   agg(lambda x: x.diff().mean(skipna=True).days). \
+    #   reset_index(). \
+    #   rename(columns={'user_id': 'user_id', 'o_date': BetweenFlag + 'o_date_cate_30_gap'})
+    # self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+    #
+    # features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 101)]. \
+    #   sort_values('o_date'). \
+    #   groupby(['user_id'])['o_date']. \
+    #   agg(lambda x: x.diff().mean(skipna=True).days). \
+    #   reset_index(). \
+    #   rename(columns={'user_id': 'user_id', 'o_date': BetweenFlag + 'o_date_cate_101_gap'})
+    # self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
     features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
       groupby(['user_id'])['month']. \
       min(). \
       reset_index(). \
-      rename(columns={'user_id': 'user_id', 'day': BetweenFlag + 'day_cate_30_101_firstmonth'})
+      rename(columns={'user_id': 'user_id', 'month': BetweenFlag + 'month_cate_30_101_firstmonth'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
     features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
       groupby(['user_id'])['month']. \
       max(). \
       reset_index(). \
-      rename(columns={'user_id': 'user_id', 'day': BetweenFlag + 'day_cate_30_101_lastmonth'})
+      rename(columns={'user_id': 'user_id', 'month': BetweenFlag + 'month_cate_30_101_lastmonth'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
     '''
@@ -405,3 +421,21 @@ class Features(object):
       reset_index(). \
       rename(columns={'user_id': 'user_id', 'a_date': BetweenFlag + 'a_date_cate_30_101_gap'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+    # features_temp_ = \
+    # features_temp_Action_[(features_temp_Action_['cate'] == 30)]. \
+    #   sort_values('a_date'). \
+    #   groupby(['user_id'])['a_date']. \
+    #   agg(lambda x: x.diff().mean(skipna=True).days). \
+    #   reset_index(). \
+    #   rename(columns={'user_id': 'user_id', 'a_date': BetweenFlag + 'a_date_cate_30_gap'})
+    # self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+    #
+    # features_temp_ = \
+    # features_temp_Action_[(features_temp_Action_['cate'] == 101)]. \
+    #   sort_values('a_date'). \
+    #   groupby(['user_id'])['a_date']. \
+    #   agg(lambda x: x.diff().mean(skipna=True).days). \
+    #   reset_index(). \
+    #   rename(columns={'user_id': 'user_id', 'a_date': BetweenFlag + 'a_date_cate_101_gap'})
+    # self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')

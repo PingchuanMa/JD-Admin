@@ -73,7 +73,7 @@ model = lgb.train(params, lgb.Dataset(X, y))
 PredFeatures.data_BuyOrNot_FirstTime[train_label_BuyNum] = model.predict(X_pred, num_iteration=model.best_iteration)
 y_pred = PredFeatures.data_BuyOrNot_FirstTime[train_label_BuyNum]
 
-feature_impo_df = pd.DataFrame(np.array([train_features, model.feature_importance()]).T, columns=['name', 'impo'])
+feature_impo_df = pd.DataFrame(np.vstack([train_features, model.feature_importance()]).T, columns=['name', 'impo'])
 feature_impo_df['impo'] = feature_impo_df['impo'].astype(int)
 with pd.option_context('display.max_rows', None, 'display.max_columns', None):
   print(feature_impo_df.sort_values(by='impo', ascending=False))
@@ -111,7 +111,7 @@ model = lgb.train(params, lgb.Dataset(X, y))
 PredFeatures.data_BuyOrNot_FirstTime[train_label_FirstTime] = model.predict(X_pred, num_iteration=model.best_iteration)
 y_pred = PredFeatures.data_BuyOrNot_FirstTime[train_label_FirstTime]
 
-feature_impo_df = pd.DataFrame(np.array([train_features, model.feature_importance()]).T, columns=['name', 'impo'])
+feature_impo_df = pd.DataFrame(np.vstack([train_features, model.feature_importance()]).T, columns=['name', 'impo'])
 feature_impo_df['impo'] = feature_impo_df['impo'].astype(int)
 with pd.option_context('display.max_rows', None, 'display.max_columns', None):
   print(feature_impo_df.sort_values(by='impo', ascending=False))
