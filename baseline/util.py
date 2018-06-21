@@ -293,6 +293,32 @@ class Features(object):
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
     '''
+    Pingchuan
+    '''
+
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
+      sort_values('o_date'). \
+      groupby(['user_id'])['o_date']. \
+      agg(lambda x: x.diff().mean(skipna=True).days). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'o_date': BetweenFlag + 'o_date_cate_30_101_gap'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
+      groupby(['user_id'])['month']. \
+      min(). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'day': BetweenFlag + 'day_cate_30_101_firstmonth'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
+      groupby(['user_id'])['month']. \
+      max(). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'day': BetweenFlag + 'day_cate_30_101_lastmonth'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+    '''
     继续添加
     '''
     '''
@@ -360,14 +386,22 @@ class Features(object):
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
     # a_date cate 30 101 天数
-    features_temp_ = \
+    features_temp__ = \
     features_temp_Action_[(features_temp_Action_['cate'] == 30) | (features_temp_Action_['cate'] == 101)]. \
       groupby(['user_id'])['a_date']. \
       nunique(). \
       reset_index(). \
       rename(columns={'user_id': 'user_id', 'a_date': BetweenFlag + 'a_date_cate_30_101_nuique'})
-    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp__, on=['user_id'], how='left')
 
     '''
     # 继续整加特征
     '''
+    features_temp_ = \
+    features_temp_Action_[(features_temp_Action_['cate'] == 30) | (features_temp_Action_['cate'] == 101)]. \
+      sort_values('a_date'). \
+      groupby(['user_id'])['a_date']. \
+      agg(lambda x: x.diff().mean(skipna=True).days). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'a_date': BetweenFlag + 'a_date_cate_30_101_gap'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')

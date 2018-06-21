@@ -56,8 +56,8 @@ params = {
   'verbose': 0
 }
 ###############################################################
-model = SBBTree(params=params, stacking_num=5, bagging_num=3, bagging_test_size=0.33, num_boost_round=10000,
-                early_stopping_rounds=200)
+# model = SBBTree(params=params, stacking_num=5, bagging_num=3, bagging_test_size=0.33, num_boost_round=10000,
+#                 early_stopping_rounds=200)
 
 # train 下个月购买次数预测 回归模型
 train_features = TrainFeatures.TrainColumns
@@ -68,8 +68,18 @@ y = TrainFeatures.data_BuyOrNot_FirstTime[train_label_BuyNum].values
 
 X_pred = PredFeatures.data_BuyOrNot_FirstTime[train_features].values
 
-model.fit(X, y)
-PredFeatures.data_BuyOrNot_FirstTime[train_label_BuyNum] = model.predict(X_pred)
+model = lgb.train(params, lgb.Dataset(X, y))
+
+PredFeatures.data_BuyOrNot_FirstTime[train_label_BuyNum] = model.predict(X_pred, num_iteration=model.best_iteration)
+y_pred = PredFeatures.data_BuyOrNot_FirstTime[train_label_BuyNum]
+
+feature_impo_df = pd.DataFrame(np.array([train_features, model.feature_importance()]).T, columns=['name', 'impo'])
+feature_impo_df['impo'] = feature_impo_df['impo'].astype(int)
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+  print(feature_impo_df.sort_values(by='impo', ascending=False))
+
+# model.train(X, y)
+# PredFeatures.data_BuyOrNot_FirstTime[train_label_BuyNum] = model.predict(X_pred)
 
 ###############################################################
 params = {
@@ -84,8 +94,8 @@ params = {
   'bagging_freq': 5,
   'verbose': 0
 }
-model = SBBTree(params=params, stacking_num=5, bagging_num=3, bagging_test_size=0.33, num_boost_round=10000,
-                early_stopping_rounds=200)
+# model = SBBTree(params=params, stacking_num=5, bagging_num=3, bagging_test_size=0.33, num_boost_round=10000,
+#                 early_stopping_rounds=200)
 
 # train 当月首次购买时间预测 回归模型
 train_label_FirstTime = 'Label_30_101_FirstTime'
@@ -96,8 +106,18 @@ y = TrainFeatures.data_BuyOrNot_FirstTime[TrainFeatures.data_BuyOrNot_FirstTime[
 
 X_pred = PredFeatures.data_BuyOrNot_FirstTime[train_features].values
 
-model.fit(X, y)
-PredFeatures.data_BuyOrNot_FirstTime[train_label_FirstTime] = model.predict(X_pred)
+model = lgb.train(params, lgb.Dataset(X, y))
+
+PredFeatures.data_BuyOrNot_FirstTime[train_label_FirstTime] = model.predict(X_pred, num_iteration=model.best_iteration)
+y_pred = PredFeatures.data_BuyOrNot_FirstTime[train_label_FirstTime]
+
+feature_impo_df = pd.DataFrame(np.array([train_features, model.feature_importance()]).T, columns=['name', 'impo'])
+feature_impo_df['impo'] = feature_impo_df['impo'].astype(int)
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+  print(feature_impo_df.sort_values(by='impo', ascending=False))
+
+# model.fit(X, y)
+# PredFeatures.data_BuyOrNot_FirstTime[train_label_FirstTime] = model.predict(X_pred)
 
 ####################################################################
 # submit
