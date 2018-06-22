@@ -85,17 +85,19 @@ y_pred = None
 for label in y_train.columns.values:
     model = lgb.train(model_params, lgb.Dataset(x_train, y_train[label]))
     y_pred = model.predict(x_test) if y_pred is None else np.vstack([y_pred, model.predict(x_test)])
+
+    # see feature importance
+	if PRINT_FEATURE_IMPORTANCE:
+		feature_impo_df = pd.DataFrame(np.array([x_train.columns.values, model.feature_importance()]).T, columns=['name', 'impo'])
+		feature_impo_df['impo'] = feature_impo_df['impo'].astype(int)
+		with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+			print(label, 'importance:')
+		  	print(feature_impo_df.sort_values(by='impo', ascending=False))
+
 y_pred = y_pred.T
 
 
 ########## RESULT CONVERSION ##########
-
-# see feature importance
-if PRINT_FEATURE_IMPORTANCE:
-	feature_impo_df = pd.DataFrame(np.array([x_train.columns.values, model.feature_importance()]).T, columns=['name', 'impo'])
-	feature_impo_df['impo'] = feature_impo_df['impo'].astype(int)
-	with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-	  print(feature_impo_df.sort_values(by='impo', ascending=False))
 
 # add back user id
 pred_df = pd.DataFrame(y_pred, columns=y_train.columns.values)
