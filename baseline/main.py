@@ -66,7 +66,18 @@ train_label_BuyNum = 'Label_30_101_BuyNum'
 X = TrainFeatures.data_BuyOrNot_FirstTime[train_features].values
 y = TrainFeatures.data_BuyOrNot_FirstTime[train_label_BuyNum].values
 
+m1 = TrainFeatures.data_BuyOrNot_FirstTime['OM1_o_date_cate_30_101_gap_var'].values
+m3 = TrainFeatures.data_BuyOrNot_FirstTime['OM3_o_date_cate_30_101_gap_var'].values
+m6 = TrainFeatures.data_BuyOrNot_FirstTime['OM6_o_date_cate_30_101_gap_var'].values
+m1[np.isnan(m1)] = np.inf
+m3[np.isnan(m3)] = np.inf
+m6[np.isnan(m6)] = np.inf
+
+confidence = np.exp(-m1 / 4.9) / 2 + np.exp(-m3 / 12.5) / 3 + np.exp(-m6 / 21.2) / 6
+
 X_pred = PredFeatures.data_BuyOrNot_FirstTime[train_features].values
+
+y *= confidence
 
 model = lgb.train(params, lgb.Dataset(X, y))
 

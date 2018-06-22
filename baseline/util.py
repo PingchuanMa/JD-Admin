@@ -45,7 +45,6 @@ class DataLoader(object):
     self.df_user_action['month'] = self.df_user_action['a_date'].dt.month
     self.df_user_action['day'] = self.df_user_action['a_date'].dt.day
 
-
 class Features(object):
   def __init__(self,
                DataLoader,
@@ -76,6 +75,9 @@ class Features(object):
     self.df_Action_User_Sku = self.DataLoader.df_user_action. \
       merge(self.DataLoader.df_user_info, on='user_id', how='left'). \
       merge(self.DataLoader.df_sku_info, on='sku_id', how='left')
+
+    self.df_Order_Comment_User_Sku['total_price'] = self.df_Order_Comment_User_Sku['price'].values *\
+                                                    self.df_Order_Comment_User_Sku['o_sku_num'].values
 
     # Make Label
     self.data_BuyOrNot_FirstTim = self.MakeLabel_()
@@ -349,10 +351,10 @@ class Features(object):
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
     features_temp_ = features_temp_Order_. \
-      groupby(['user_id'])['price']. \
+      groupby(['user_id'])['total_price']. \
       sum(). \
       reset_index(). \
-      rename(columns={'user_id': 'user_id', 'price': BetweenFlag + 'total_consume'})
+      rename(columns={'user_id': 'user_id', 'total_price': BetweenFlag + 'total_consume'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
     features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
