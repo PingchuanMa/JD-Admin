@@ -394,7 +394,8 @@ def get_action_order_feature(data, begin_date, end_date, month_period):
     temp_df = df. \
                 groupby('user_id')['date_gap']. \
                 mean(). \
-                reset_index()
+                reset_index(). \
+                rename(columns={'date_gap': name_all + 'date_gap'})
     action_order_feature_df = merge_df(action_order_feature_df, temp_df)
 
     ########## FEATURE END ##########
