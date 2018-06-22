@@ -83,7 +83,7 @@ model_params = {
 
 y_pred = None
 for label in y_train.columns.values:
-    model = lgb.train(params, lgb.Dataset(x_train, y_train[label]))
+    model = lgb.train(model_params, lgb.Dataset(x_train, y_train[label]))
     y_pred = model.predict(x_test) if y_pred is None else np.vstack([y_pred, model.predict(x_test)])
 y_pred = y_pred.T
 

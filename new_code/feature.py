@@ -1,9 +1,13 @@
 import pandas as pd
 from datetime import datetime
 
+count = 0
 
 # convenient function for feature merging
 def merge_df(df1, df2):
+    global count
+    count += 1
+    print(count)
     return df2 if df1 is None else df1.merge(df2, on='user_id', how='left')
 
 
@@ -364,7 +368,7 @@ def get_action_order_feature(data, begin_date, end_date, month_period):
     action_order_df = data.action_df[['user_id', 'sku_id', 'cate', 'a_date']]. \
                         merge(data.order_df[['user_id', 'sku_id', 'cate', 'o_date']], on=['user_id', 'sku_id', 'cate'], how='left')
     action_order_df = action_order_df[action_order_df.o_date >= action_order_df.a_date]
-    action_order_df['date_gap'] = pd.to_numeric(action_order_df.o_date.sub(action_order_df.a_date))
+    action_order_df['date_gap'] = (action_order_df.o_date - action_order_df.a_date).apply(lambda x: x.days)
 
     # filter by date range
     df = action_order_df[(action_order_df.o_date >= begin_date) & (action_order_df.o_date <= end_date) & \
