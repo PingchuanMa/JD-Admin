@@ -318,6 +318,21 @@ class Features(object):
     #   rename(columns={'user_id': 'user_id', 'cate': BetweenFlag + 'cate_nunique'})
     # self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
+      groupby(['user_id'])['o_date']. \
+      nunique(). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'o_date': 'o_date'})
+
+    features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
+      sort_values('o_date'). \
+      groupby(['user_id'])['o_date']. \
+      agg(lambda x: x.diff().dt.days.std(skipna=True)). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'o_date': BetweenFlag + 'o_date_cate_30_101_gap_var'}) \
+      [features_temp_['o_date'] > 2]
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
     features_temp_ = features_temp_Order_. \
       groupby(['user_id'])['o_area']. \
       agg(lambda x: x.value_counts().index[0]). \

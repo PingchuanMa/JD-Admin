@@ -126,6 +126,10 @@ out_submit = PredFeatures.data_BuyOrNot_FirstTime[columns].sort_values(['Label_3
 out_submit[train_label_FirstTime] = out_submit[train_label_FirstTime].map(
   lambda day: datetime(2017, 5, 1) + timedelta(days=int(day + 0.49 - 1)))
 
+# clip
+out_submit[train_label_FirstTime] = out_submit[train_label_FirstTime].map(
+  lambda day: datetime(2017, 5, 14) if day > datetime(2017, 5, 14) else day)
+
 out_submit = out_submit[['user_id'] + [train_label_FirstTime]]
 out_submit.columns = ['user_id', 'pred_date']
 out_submit.head(50000).to_csv('../submit/predict.csv', index=False, header=True)
