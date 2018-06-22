@@ -96,6 +96,14 @@ class Features(object):
         BetweenFlag='AM' + str(month) + '_'
       )
 
+    #MakeFeature_action_buy_gap
+    for FeatureMonthBegin, FeatureMonthEnd, month in FeatureMonthList:
+      self.MakeFeature_action_buy_gap_(
+        FeatureMonthBegin=FeatureMonthBegin,
+        FeatureMonthEnd=FeatureMonthEnd,
+        BetweenFlag='GM' + str(month) + '_'
+      )
+
     self.TrainColumns = [col for col in self.data_BuyOrNot_FirstTime.columns if
                          col not in self.IDColumns + self.LabelColumns]
 
@@ -551,3 +559,28 @@ class Features(object):
     #   reset_index(). \
     #   rename(columns={'user_id': 'user_id', 'a_date': BetweenFlag + 'a_date_cate_101_gap'})
     # self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+  def MakeFeature_action_buy_gap_(
+        self,
+        FeatureMonthBegin,
+        FeatureMonthEnd,
+        BetweenFlag
+    ):
+    features_temp_Action_= self.df_Action_User_Sku[(self.df_Action_User_Sku['a_date'] >=FeatureMonthBegin) & \
+            (self.df_Action_User_Sku['a_date'] <= FeatureMonthEnd)]
+    features_temp_Order_ = self.df_Order_Comment_User_Sku[
+            (self.df_Order_Comment_User_Sku['o_date'] >= FeatureMonthBegin) & \
+            (self.df_Order_Comment_User_Sku['o_date'] <= FeatureMonthEnd)]
+    features_merge = features_temp_Order_.merge(features_temp_Action_, on=['user_id', 'sku_id'],how='left')
+    features_merge = features_merge[features_merge['o_date'] > features_merge['a_date']]
+
+    features_merge['action2order_diff'] = \
+        pd.to_numeric(features_merge['o_date'].sub(features_merge['a_date']))
+    action2order = features_merge.\
+            groupby(['user_id'])['action2order_diff'].\
+            mean().\
+            reset_index().\
+            rename(columns={'user_id':'user_id','action2order_diff':BetweenFlag+'action2order_diff'})
+    self.data_BuyOrNot_FirstTime = \
+        self.data_BuyOrNot_FirstTime.merge(action2order, on=['user_id'], how='left')
+
