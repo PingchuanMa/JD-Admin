@@ -188,6 +188,13 @@ class Features(object):
       rename(columns={'user_id': 'user_id', 'o_id': BetweenFlag + 'o_id_cate_other_cnt'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
+    features_temp_ = features_temp_Order_. \
+      groupby(['user_id'])['o_id']. \
+      nunique(). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'o_id': BetweenFlag + 'o_id_cate_all_cnt'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
     #################################################################################################################
     # sku_id cate 30 101 购买商品次数
     features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30) | (features_temp_Order_['cate'] == 101)]. \
@@ -219,6 +226,27 @@ class Features(object):
       count(). \
       reset_index(). \
       rename(columns={'user_id': 'user_id', 'sku_id': BetweenFlag + 'sku_id_cate_other_cnt'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+    features_temp_ = features_temp_Order_. \
+      groupby(['user_id'])['sku_id']. \
+      nunique(). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'sku_id': BetweenFlag + 'sku_id_nunique'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+    features_temp_ = features_temp_Order_. \
+      groupby(['user_id'])['cate']. \
+      nunique(). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'cate': BetweenFlag + 'cate_nunique'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+    features_temp_ = features_temp_Order_. \
+      groupby(['user_id'])['o_area']. \
+      agg(lambda x: x.value_counts().index[0]). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'o_area': BetweenFlag + 'area_most_common'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
     #################################################################################################################
@@ -304,6 +332,14 @@ class Features(object):
       rename(columns={'user_id': 'user_id', 'o_date': BetweenFlag + 'o_date_cate_30_101_gap'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
+    features_temp_ = features_temp_Order_. \
+      sort_values('o_date'). \
+      groupby(['user_id'])['o_date']. \
+      agg(lambda x: x.diff().mean(skipna=True).days). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'o_date': BetweenFlag + 'o_date_cate_all_gap'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
     # features_temp_ = features_temp_Order_[(features_temp_Order_['cate'] == 30)]. \
     #   sort_values('o_date'). \
     #   groupby(['user_id'])['o_date']. \
@@ -345,21 +381,21 @@ class Features(object):
     #　对３０的评价次数
     features_temp_ = features_temp_Order_[(features_temp_Order_['cate']==30)].\
         groupby(['user_id'])['comment_create_tm'].\
-        nunique().\
+        count().\
         reset_index().\
         rename(columns={'user_id':'user_id','comment_create_tm':BetweenFlag+'num_comment_on_30'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_,on=['user_id'],how='left')
     #　对１０１的评价次数
     features_temp_ = features_temp_Order_[(features_temp_Order_['cate']==101)].\
         groupby(['user_id'])['comment_create_tm'].\
-        nunique().\
+        count().\
         reset_index().\
         rename(columns={'user_id':'user_id','comment_create_tm':BetweenFlag+'num_comment_on_101'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_,on=['user_id'],how='left')
     # 对３０或者１０１的评价次数
     features_temp_ = features_temp_Order_[(features_temp_Order_['cate']==101) | (features_temp_Order_['cate']==30)].\
         groupby(['user_id'])['comment_create_tm'].\
-        nunique().\
+        count().\
         reset_index().\
         rename(columns={'user_id':'user_id','comment_create_tm':BetweenFlag+'num_comment_on_101_and_30'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_,on=['user_id'],how='left')
@@ -420,6 +456,15 @@ class Features(object):
       agg(lambda x: x.diff().mean(skipna=True).days). \
       reset_index(). \
       rename(columns={'user_id': 'user_id', 'a_date': BetweenFlag + 'a_date_cate_30_101_gap'})
+    self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
+
+    features_temp_ = \
+    features_temp_Action_[(features_temp_Action_['cate'] == 30) | (features_temp_Action_['cate'] == 101)]. \
+      sort_values('a_date'). \
+      groupby(['user_id'])['a_date']. \
+      agg(lambda x: x.diff().mean(skipna=True).days). \
+      reset_index(). \
+      rename(columns={'user_id': 'user_id', 'a_date': BetweenFlag + 'a_date_cate_all_gap'})
     self.data_BuyOrNot_FirstTime = self.data_BuyOrNot_FirstTime.merge(features_temp_, on=['user_id'], how='left')
 
     # features_temp_ = \
