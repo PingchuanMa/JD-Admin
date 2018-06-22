@@ -99,14 +99,14 @@ if PRINT_FEATURE_IMPORTANCE:
 
 # add back user id
 pred_df = pd.DataFrame(y_pred, columns=y_train.columns.values)
-pred_df['user_id'] = user_df[['user_id']]
+pred_df['user_id'] = data.user_df[['user_id']]
 pred_df = pred_df[['user_id', 'pred_date', 'order_num']]
 output_df = label_to_output(pred_df, test_label_begin_date)
 
 if VALIDATION:
 
 	ground_truth = data.order_df[(data.order_df.o_date >= test_label_begin_date) & \
-        (Data.df_user_order.o_date <= test_label_end_date)]. \
+        (data.order_df.o_date <= test_label_end_date)]. \
         groupby('user_id')['o_date']. \
         min(). \
         reset_index(). \
