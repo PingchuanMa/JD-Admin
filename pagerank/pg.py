@@ -66,13 +66,14 @@ class LinkAnalyzer(object):
 
     def make_pg_matrix(self):
         self.pr_matrix = csr_matrix((self.data, (self.row, self.col)), dtype=np.float32, shape=(self.href_cnt, self.href_cnt))
-        # added by Yujun
-        #------------------------
+        # deal with dead end here. randomly walk to any node if it's a dead end
+        # node
         deadend_lines = []
         for node in self.deadend_nodes:
             deadend_lines.append(self.href[node])
         self.pr_matrix[deadend_lines, :] = 1/self.href_cnt;
-        #------------------------
+
+        # we have to transpose to get the actual page rank matrix
         self.pr_matrix = self.pr_matrix.transpose()
 
     def compute_pr(self, p=0.85):
@@ -93,10 +94,14 @@ class LinkAnalyzer(object):
     # since the data can be fit into the memory
     def compute_pr_block_stripe(self, p=0.85, stripe=1000):
         num_block = int(math.ceil(self.href_cnt/stripe))
+        # slice the original sparse matrix into `num_block` stripes
         stripe_pr_matrix = [];
         for i in range(num_block):
+            # lower bound and upper bound index for the submatrix of the
+            # original page rank matrix
             low_bound = i*stripe
             up_bound = min((i+1)*stripe, self.href_cnt)
+            # put the submatrix into the list
             stripe_pr_matrix.append(self.pr_matrix[low_bound:up_bound,:])
 
         process = 0
@@ -108,11 +113,15 @@ class LinkAnalyzer(object):
             for i in range(num_block):
                 low_bound = i*stripe
                 up_bound = min((i+1)*stripe, self.href_cnt)
+                # update a subset of the nodes by the submatrix
                 pr_[low_bound:up_bound] = p*stripe_pr_matrix[i].dot(pr)+(1-p)*(1/self.href_cnt)
+                # only when all subset of the nodes converge can we say that
+                # the whole system converged.
                 tmp_converge = tmp_converge and np.isclose(pr_[low_bound:up_bound], pr[low_bound:up_bound]).all()
             process += 1
             pr = np.copy(pr_)
             converge = tmp_converge
+        # store the result
         self.pr_vector = pr
         print("item num: %d" % len(self.data))
         print("dimension: %d" % self.href_cnt)
@@ -133,11 +142,9 @@ class LinkAnalyzer(object):
         with open(path, 'r') as f:
             dat = pd.read_csv(f, sep='\t', header=None, names=['a', 'b']).sort_values(by='a')
 
-        # added by Yujun
-        #--------------------------
+        # obtain all dead end nodes
         all_nodes = np.unique(np.hstack([dat.a.values, dat.b.values]))
         self.deadend_nodes = set(all_nodes) - set(np.unique(dat.a.values))
-        #--------------------------
 
         pre = None
         for _, line in dat.iterrows():
