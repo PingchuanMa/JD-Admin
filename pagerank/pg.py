@@ -126,6 +126,16 @@ class LinkAnalyzer(object):
         self.time = time.time()
         return delta
 
+    def output_result(self):
+        inv_href = {v: k for k, v in self.href.items()}
+        pr_vector_with_id = np.hstack([self.pr_vector,
+            np.expand_dims(np.arange(self.href_cnt), axis=1)])
+        sorted_idx = np.argsort(-pr_vector_with_id, axis=0)[:, 0]
+        result_vector_with_id = pr_vector_with_id[sorted_idx]
+        with open('result.txt', 'w') as f:
+            for i in range(100):
+                f.write(str(inv_href[int(result_vector_with_id[i, 1])]) + '\t' + str(result_vector_with_id[i, 0]) + '\n')
+
 
 if __name__ == '__main__':
     la = LinkAnalyzer()
@@ -135,3 +145,4 @@ if __name__ == '__main__':
     la.compute_pr()
     print("Page Rank Done:", la.get_delta_time())
     la.save_state()
+    la.output_result()
