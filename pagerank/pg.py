@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 import json
+import math
 
 
 class LinkAnalyzer(object):
@@ -88,6 +89,37 @@ class LinkAnalyzer(object):
         print("dimension: %d" % self.href_cnt)
         print("iteration num: %d" % process)
 
+    # block stripe strategy.
+    # this code can just simulate the algorithm.
+    # since the data can be fit into the memory
+    def compute_pr_block_stripe(self, p=0.85, stripe=1000):
+        num_block = int(math.ceil(self.href_cnt/stripe))
+        stripe_pr_matrix = [];
+        for i in range(num_block):
+            low_bound = i*stripe
+            up_bound = min((i+1)*stripe, self.href_cnt)
+            stripe_pr_matrix.append(self.pr_matrix[low_bound:up_bound,:])
+
+        process = 0
+        pr = np.ones((self.href_cnt, 1), dtype=np.float32) * (1 / self.href_cnt)
+        pr_ = np.zeros(pr.shape, dtype=np.float32)
+        converge = False
+        while not converge:
+            tmp_converge = True
+            for i in range(num_block):
+                low_bound = i*stripe
+                up_bound = min((i+1)*stripe, self.href_cnt)
+                pr_[low_bound:up_bound] = p*stripe_pr_matrix[i].dot(pr)+(1-p)*(1/self.href_cnt)
+                tmp_converge = tmp_converge and np.isclose(pr_[low_bound:up_bound], pr[low_bound:up_bound]).all()
+            process += 1
+            pr = np.copy(pr_)
+            converge = tmp_converge
+        self.pr_vector = pr
+        print("item num: %d" % len(self.data))
+        print("dimension: %d" % self.href_cnt)
+        print("iteration num: %d" % process)
+
+
     def get_pr(self, full_href):
         return self.pr_vector[self.href[full_href]][0]
 
@@ -142,7 +174,8 @@ if __name__ == '__main__':
     la.load_wiki('./info/WikiData.txt')
     la.get_delta_time()
     la.make_pg_matrix()
-    la.compute_pr()
+    #la.compute_pr()
+    la.compute_pr_block_stripe()
     print("Page Rank Done:", la.get_delta_time())
     la.save_state()
     la.output_result()
