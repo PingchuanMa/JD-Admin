@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 
 import os
-from urllib.parse import urljoin
 import time
 import numpy as np
 import pandas as pd
@@ -118,7 +117,6 @@ class LinkAnalyzer(object):
         print("item num: %d" % len(self.data))
         print("dimension: %d" % self.href_cnt)
         print("iteration num: %d" % process)
-
 
     def get_pr(self, full_href):
         return self.pr_vector[self.href[full_href]][0]
