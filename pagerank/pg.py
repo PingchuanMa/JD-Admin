@@ -7,7 +7,8 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 import json
 import math
-
+import scipy.sparse
+import pickle
 
 class LinkAnalyzer(object):
 
@@ -127,6 +128,56 @@ class LinkAnalyzer(object):
         print("dimension: %d" % self.href_cnt)
         print("iteration num: %d" % process)
 
+    # block stripe strategy.
+    # this code can just simulate the algorithm.
+    # since the data can be fit into the memory
+
+    #scipy.sparse.save_npz('/tmp/sparse_matrix.npz', sparse_matrix)
+    #sparse_matrix = scipy.sparse.load_npz('/tmp/sparse_matrix.npz')
+
+    def compute_pr_block_stripe_disk(self, p=0.85, stripe=1000):
+        num_block = int(math.ceil(self.href_cnt/stripe))
+        # slice the original sparse matrix into `num_block` stripes
+        for i in range(num_block):
+            # lower bound and upper bound index for the submatrix of the
+            # original page rank matrix
+            low_bound = i*stripe
+            up_bound = min((i+1)*stripe, self.href_cnt)
+            # put the submatrix into the list
+            scipy.sparse.save_npz('diskcache/'+str(i)+'.npz', self.pr_matrix[low_bound:up_bound,:]) 
+
+        process = 0
+        pr = np.ones((self.href_cnt, 1), dtype=np.float32) * (1 / self.href_cnt)
+        converge = False
+        while not converge:
+            tmp_converge = True
+            for i in range(num_block):
+                low_bound = i*stripe
+                up_bound = min((i+1)*stripe, self.href_cnt)
+                # update a subset of the nodes by the submatrix
+                sub_pr_matrix = scipy.sparse.load_npz('diskcache/'+str(i)+'.npz')
+                
+                tmp_res = p*sub_pr_matrix.dot(pr)+(1-p)*(1/self.href_cnt)
+                with open('diskcache/tmp_rank_'+str(i)+'.p', 'wb') as f:
+                    pickle.dump(tmp_res, f)
+                # only when all subset of the nodes converge can we say that
+                # the whole system converged.
+                tmp_converge = tmp_converge and np.isclose(tmp_res, pr[low_bound:up_bound]).all()
+            process += 1
+
+            for i in range(num_block):
+                low_bound = i*stripe
+                up_bound = min((i+1)*stripe, self.href_cnt)               
+                with open('diskcache/tmp_rank_'+str(i)+'.p', 'rb') as f:
+                    pr[low_bound:up_bound] = pickle.load(f)
+            converge = tmp_converge
+        # store the result
+        self.pr_vector = pr
+        print("item num: %d" % len(self.data))
+        print("dimension: %d" % self.href_cnt)
+        print("iteration num: %d" % process)
+
+
     def get_pr(self, full_href):
         return self.pr_vector[self.href[full_href]][0]
 
@@ -180,7 +231,8 @@ if __name__ == '__main__':
     la.get_delta_time()
     la.make_pg_matrix()
     #la.compute_pr()
-    la.compute_pr_block_stripe()
+    #la.compute_pr_block_stripe()
+    la.compute_pr_block_stripe_disk()
     print("Page Rank Done:", la.get_delta_time())
     la.save_state()
     la.output_result()
