@@ -13,7 +13,7 @@ import pickle
 
 class LinkAnalyzer(object):
 
-    def __init__(self):
+    def __init__(self, rtol=1e-5, atol=1e-8):
         """
         Initialize all variables
         """
@@ -28,6 +28,9 @@ class LinkAnalyzer(object):
         self.pr_vector = None
         self.time = 0
         self.deadend_nodes = None
+
+        self.rtol = rtol
+        self.atol = atol
 
     def save_state(self):
         """
@@ -136,9 +139,9 @@ class LinkAnalyzer(object):
 
         # Let's iterate till the end of the world! (just kidding)
         # Here we use `np.isclose()` method to judge whether the
-        # computed vector is enough close to the real value, the
-        # default delta is $1e-6$
-        while not np.isclose(pr, pr_).all():
+        # computed vector is enough close to the real value, using
+        # relative tolerance `rtol` and absolute tolerance `atol`
+        while not np.isclose(pr, pr_, rtol=self.rtol, atol=self.atol).all():
             pr = pr_
             # next iteration
             pr_ = p * self.pr_matrix.dot(pr) + (1 - p) * (1 / self.href_cnt)
@@ -146,8 +149,7 @@ class LinkAnalyzer(object):
         # collect the final result
         self.pr_vector = pr_
         # visualize the process
-        print("item num: %d" % len(self.data))
-        print("dimension: %d" % self.href_cnt)
+        self.print_info()
         print("iteration num: %d" % process)
 
     # block stripe strategy.
@@ -178,14 +180,13 @@ class LinkAnalyzer(object):
                 pr_[low_bound:up_bound] = p * stripe_pr_matrix[i].dot(pr) + (1 - p) * (1 / self.href_cnt)
                 # only when all subset of the nodes converge can we say that
                 # the whole system converged.
-                tmp_converge = tmp_converge and np.isclose(pr_[low_bound:up_bound], pr[low_bound:up_bound]).all()
+                tmp_converge = tmp_converge and np.isclose(pr_[low_bound:up_bound], pr[low_bound:up_bound], rtol=self.rtol, atol=self.atol).all()
             process += 1
             pr = np.copy(pr_)
             converge = tmp_converge
         # store the result
         self.pr_vector = pr
-        print("item num: %d" % len(self.data))
-        print("dimension: %d" % self.href_cnt)
+        self.print_info()
         print("iteration num: %d" % process)
 
     # block stripe strategy.
@@ -222,7 +223,7 @@ class LinkAnalyzer(object):
                     pickle.dump(tmp_res, f)
                 # only when all subset of the nodes converge can we say that
                 # the whole system converged.
-                tmp_converge = tmp_converge and np.isclose(tmp_res, pr[low_bound:up_bound]).all()
+                tmp_converge = tmp_converge and np.isclose(tmp_res, pr[low_bound:up_bound], rtol=self.rtol, atol=self.atol).all()
             process += 1
 
             for i in range(num_block):
@@ -233,8 +234,7 @@ class LinkAnalyzer(object):
             converge = tmp_converge
         # store the result
         self.pr_vector = pr
-        print("item num: %d" % len(self.data))
-        print("dimension: %d" % self.href_cnt)
+        self.print_info()
         print("iteration num: %d" % process)
 
     def get_pr(self, full_href):
@@ -295,6 +295,14 @@ class LinkAnalyzer(object):
         self.time = time.time()
         return delta
 
+    def print_info(self):
+        """
+        Print key informations
+        """
+        print("link num: %d" % len(self.data))
+        print("dimension: %d" % self.href_cnt)
+        print("tolerance: %.2e(r), %.2e(a)" % (self.rtol, self.atol))
+
     def output_result(self):
         """
         Simply output our page rank vector according to the given format
@@ -318,6 +326,6 @@ if __name__ == '__main__':
     # la.compute_pr()
     # la.compute_pr_block_stripe()
     la.compute_pr_block_stripe_disk()
-    print("Page Rank Done:", la.get_delta_time())
+    print("page-rank done in %.2f seconds" % la.get_delta_time())
     la.save_state()
     la.output_result()
