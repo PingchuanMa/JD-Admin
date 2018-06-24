@@ -66,6 +66,13 @@ class LinkAnalyzer(object):
 
     def make_pg_matrix(self):
         self.pr_matrix = csr_matrix((self.data, (self.row, self.col)), dtype=np.float32, shape=(self.href_cnt, self.href_cnt))
+        # added by Yujun
+        #------------------------
+        deadend_lines = []
+        for node in self.deadend_nodes:
+            deadend_lines.append(self.href[node])
+        self.pr_matrix[deadend_lines, :] = 1/self.href_cnt;
+        #------------------------
         self.pr_matrix = self.pr_matrix.transpose()
 
     def compute_pr(self, p=0.85):
@@ -95,6 +102,13 @@ class LinkAnalyzer(object):
     def load_wiki(self, path):
         with open(path, 'r') as f:
             dat = pd.read_csv(f, sep='\t', header=None, names=['a', 'b']).sort_values(by='a')
+
+        # added by Yujun
+        #--------------------------
+        all_nodes = np.unique(np.hstack([dat.a.values, dat.b.values]))
+        self.deadend_nodes = set(all_nodes) - set(np.unique(dat.a.values))
+        #--------------------------
+
         pre = None
         for _, line in dat.iterrows():
             # `a` is out-node, `b` is in-node
@@ -105,6 +119,7 @@ class LinkAnalyzer(object):
                 pre = line.a
             self.add_in(int(line.b))
         self.add_row()
+
 
     def get_delta_time(self):
         delta = time.time() - self.time
